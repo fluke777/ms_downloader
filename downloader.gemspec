@@ -14,4 +14,5 @@ Gem::Specification.new do |gem|
   gem.name          = "downloader"
   gem.require_paths = ["lib"]
   gem.version       = Downloader::VERSION
+  gem.add_dependency('pry')
 end
