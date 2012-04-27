@@ -33,8 +33,7 @@ module GDC
         files = files.map {|file| Pathname.new(file).expand_path}
         exclude_files = @exclude_pattern && Dir.glob(@exclude_pattern)
         exclude_files = exclude_files && exclude_files.map {|exclude_file| Pathname.new(exclude_file).expand_path}
-        exclude_files && files = files - exclude_files
-        binding.pry
+        files = files - exclude_files unless exclude_files.nil?
         if @latest
           last_file = files.sort_by {|f| File.mtime(f)}.last
           FileUtils::cp last_file.to_s, @target_dir.to_s
