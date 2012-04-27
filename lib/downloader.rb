@@ -1,4 +1,3 @@
-require "bundler/setup"
 require "downloader/version"
 require 'pry'
 require 'fileutils'
