@@ -18,7 +18,7 @@ module GDC
     def initialize(options={})
       @pattern          = options[:pattern] || "*"
       @exclude_pattern  = options[:exclude_pattern]
-      @source_dir       = Pathname.new(options[:source_dir] || ".")
+      @source_dir       = Pathname.new(options[:source_dir] || ".").expand_path
       
       @occurrence       = options[:occurrence] || "all"
       fail "Occurrence have to be set to one of: latest, oldest, all or omitted." unless ["all", "latest", "oldest"].include?(@occurrence)
@@ -29,6 +29,7 @@ module GDC
     end
 
     def execute
+      
       FileUtils::cd(@source_dir) do
         files = Dir.glob(@pattern)
         files = files.map {|file| Pathname.new(file).expand_path}
@@ -43,7 +44,9 @@ module GDC
         end
      
         files.each do |path|
-          FileUtils::cp path.to_s, @target_dir.to_s
+          target = path.sub(@source_dir,@target_dir)
+          FileUtils.mkdir_p(target.dirname)    
+          FileUtils.cp(path, target)
         end
      
       end
