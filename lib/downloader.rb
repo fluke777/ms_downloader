@@ -19,7 +19,9 @@ module GDC
       @pattern          = options[:pattern] || "*"
       @exclude_pattern  = options[:exclude_pattern]
       @source_dir       = Pathname.new(options[:source_dir] || ".")
-      @latest           = options[:latest] || false
+      
+      @occurrence       = options[:occurrence] || "all"
+      fail "Occurrence have to be set to one of: latest, oldest, all or omitted." unless ["all", "latest", "oldest"].include?(@occurrence)
       
       fail "You have to define target directory" if options[:target_dir].nil?
       @target_dir = Pathname.new(options[:target_dir]).expand_path
@@ -33,14 +35,17 @@ module GDC
         exclude_files = @exclude_pattern && Dir.glob(@exclude_pattern)
         exclude_files = exclude_files && exclude_files.map {|exclude_file| Pathname.new(exclude_file).expand_path}
         files = files - exclude_files unless exclude_files.nil?
-        if @latest
-          last_file = files.sort_by {|f| File.mtime(f)}.last
-          FileUtils::cp last_file.to_s, @target_dir.to_s
-        else
-          files.each do |path|
-            FileUtils::cp path.to_s, @target_dir.to_s
-          end
+        
+        unless @occurrence == "all"
+          sorted_files = files.sort_by {|f| File.mtime(f)}
+          files = @occurrence == "latest" ? sorted_files.first : sorted_files.last
+          files = [files]
         end
+     
+        files.each do |path|
+          FileUtils::cp path.to_s, @target_dir.to_s
+        end
+     
       end
     end
 
@@ -53,6 +58,7 @@ end
 #   :exclude_pattern    => "data3.csv",
 #   :source_dir         => "/Users/fluke/test_src",
 #   :target_dir         => "/Users/fluke/test_dst",
-#   :latest             => true,
+#   :occurrence             => :true,  ..oldest,latest,all
 #   :check_index        => "name.idx"
 # })
+# has new data? method
