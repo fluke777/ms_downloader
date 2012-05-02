@@ -16,7 +16,7 @@ module GDC
     end
 
     def initialize(options={})
-      @pattern          = options[:pattern] || "*"
+      @pattern          = options[:pattern] || "**/*"
       @exclude_pattern  = options[:exclude_pattern]
       @source_dir       = Pathname.new(options[:source_dir] || ".").expand_path
       
@@ -46,7 +46,7 @@ module GDC
         files.each do |path|
           target = path.sub(@source_dir,@target_dir)
           FileUtils.mkdir_p(target.dirname)    
-          FileUtils.cp(path, target)
+          FileUtils.cp(path, target) unless path.directory?
         end
      
       end
