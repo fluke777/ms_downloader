@@ -17,6 +17,7 @@ module GDC
 
     def initialize(options={})
       @pattern          = options[:pattern] || "**/*"
+      @file_list        = options[:file_list]
       @exclude_pattern  = options[:exclude_pattern]
       @source_dir       = Pathname.new(options[:source_dir] || ".").expand_path
       
@@ -31,8 +32,12 @@ module GDC
     def execute
       
       FileUtils::cd(@source_dir) do
-        files = Dir.glob(@pattern)
-        files = files.map {|file| Pathname.new(file).expand_path}
+        if !@file_list.nil? 
+          check_existence
+        else
+          @file_list = Dir.glob(@pattern)
+        end
+        files = @file_list.map {|file| Pathname.new(file).expand_path}
         exclude_files = @exclude_pattern && Dir.glob(@exclude_pattern)
         exclude_files = exclude_files && exclude_files.map {|exclude_file| Pathname.new(exclude_file).expand_path}
         files = files - exclude_files unless exclude_files.nil?
@@ -51,6 +56,14 @@ module GDC
      
       end
     end
+    
+    def check_existence
+      missing = []
+      @file_list.each do |file|
+        missing << file unless File.exists?(file)
+      end
+      fail "Files - #{missing.join(',')} - are missing." unless missing.empty?
+    end
 
   end
 
@@ -62,6 +75,6 @@ end
 #   :source_dir         => "/Users/fluke/test_src",
 #   :target_dir         => "/Users/fluke/test_dst",
 #   :occurrence             => :true,  ..oldest,latest,all
-#   :check_index        => "name.idx"
+#   :file_list          => ["file1.txt","file2.txt"]
 # })
 # has new data? method
