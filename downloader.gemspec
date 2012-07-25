@@ -15,4 +15,5 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Downloader::VERSION
   gem.add_dependency('pry')
+  gem.add_dependency('net-sftp')
 end

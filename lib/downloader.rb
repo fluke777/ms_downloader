@@ -3,18 +3,19 @@ require 'pry'
 require 'fileutils'
 require 'pathname'
 require 'pp'
+require 'net/sftp'
 
 module GDC
-
+  
   class Downloader
-
+    
     attr_accessor :pattern
-
+    
     def self.download(options={})
       d = GDC::Downloader.new(options)
       d.execute
     end
-
+    
     def initialize(options={})
       @pattern          = options[:pattern] || "**/*"
       @file_list        = options[:file_list]
@@ -26,15 +27,15 @@ module GDC
       
       fail "You have to define target directory" if options[:target_dir].nil?
       @target_dir = Pathname.new(options[:target_dir]).expand_path
-
+      
     end
-
+    
     def execute
       
       FileUtils::cd(@source_dir) do
         if !@file_list.nil? 
           check_existence
-        else
+          else
           @file_list = Dir.glob(@pattern)
         end
         files = @file_list.map {|file| Pathname.new(file).expand_path}
@@ -47,13 +48,13 @@ module GDC
           files = @occurrence == "latest" ? sorted_files.first : sorted_files.last
           files = [files]
         end
-     
+        
         files.each do |path|
           target = path.sub(@source_dir,@target_dir)
           FileUtils.mkdir_p(target.dirname)    
           FileUtils.cp(path, target) unless path.directory?
         end
-     
+        
       end
     end
     
@@ -64,8 +65,35 @@ module GDC
       end
       fail "Files - #{missing.join(',')} - are missing." unless missing.empty?
     end
+    
+  end
+
+  class SftpDownloader
+  
+    def self.download(options={})
+      d = GDC::SftpDownloder.new(options[:server], options[:password], options[:login], options[:pid])
+      d.execute(options[:target_dir], options[:pattern])
+    end
+
+    def initialize(server, password, login, pid)
+      @server = server
+      @password = password
+      @login = login
+      @pid = pid
+    end
+
+    # Download oldest file satisfying given pattern
+    def execute(target_dir, pattern)
+      Net::SFTP.start(@server, @pid + '@' + @login, :password => @password) do |sftp|
+        files = sftp.dir.glob(".", pattern)
+        file = files.min_by{|f| f.attributes.attributes[:mtime]}
+        filename = file.name
+        sftp.download!(filename, target_dir + '/' + filename)
+    end
+  end
 
   end
+
 
 end
 
