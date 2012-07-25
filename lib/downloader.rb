@@ -87,9 +87,10 @@ module GDC
       target_dir = Pathname.new(target_dir).expand_path
       Net::SFTP.start(@server, @pid + '@' + @login, :password => @password) do |sftp|
         files = sftp.dir.glob(".", pattern)
-        file = files.min_by{|f| f.attributes.attributes[:mtime]}
-        filename = file.name
-        sftp.download!(filename, target_dir + filename)
+        #file = files.min_by{|f| f.attributes.attributes[:mtime]}
+        files.each do |file|
+          sftp.download!(file.name, target_dir + file.name)
+        end
     end
   end
 
