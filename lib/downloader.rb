@@ -71,7 +71,7 @@ module GDC
   class SftpDownloader
   
     def self.download(options={})
-      d = GDC::SftpDownloder.new(options[:server], options[:password], options[:login], options[:pid])
+      d = GDC::SftpDownloader.new(options[:server], options[:password], options[:login], options[:pid])
       d.execute(options[:target_dir], options[:pattern])
     end
 
