@@ -84,11 +84,12 @@ module GDC
 
     # Download oldest file satisfying given pattern
     def execute(target_dir, pattern)
+      target_dir = Pathname.new(target_dir).expand_path
       Net::SFTP.start(@server, @pid + '@' + @login, :password => @password) do |sftp|
         files = sftp.dir.glob(".", pattern)
         file = files.min_by{|f| f.attributes.attributes[:mtime]}
         filename = file.name
-        sftp.download!(filename, target_dir + '/' + filename)
+        sftp.download!(filename, target_dir + filename)
     end
   end
 
