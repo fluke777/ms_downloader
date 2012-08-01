@@ -35,7 +35,7 @@ module GDC
       FileUtils::cd(@source_dir) do
         if !@file_list.nil? 
           check_existence
-          else
+        else
           @file_list = Dir.glob(@pattern)
         end
         files = @file_list.map {|file| Pathname.new(file).expand_path}
@@ -72,7 +72,7 @@ module GDC
   
     def self.download(options={})
       d = GDC::SftpDownloader.new(options[:server], options[:password], options[:login], options[:pid])
-      d.execute(options[:target_dir], options[:pattern])
+      d.execute(options[:target_dir], options[:pattern], options[:exclude_pattern])
     end
 
     def initialize(server, password, login, pid)
@@ -82,17 +82,18 @@ module GDC
       @pid = pid
     end
 
-    # Download oldest file satisfying given pattern
-    def execute(target_dir, pattern)
+    # Download files satisfying given pattern
+    def execute(target_dir, pattern, exclude_pattern = nil)
       target_dir = Pathname.new(target_dir).expand_path
       Net::SFTP.start(@server, @pid + '@' + @login, :password => @password) do |sftp|
         files = sftp.dir.glob(".", pattern)
+        exclude_files = exclude_pattern.nil? ? [] : sftp.dir.glob(".", exclude_pattern)
         #file = files.min_by{|f| f.attributes.attributes[:mtime]}
         files.each do |file|
-          sftp.download!(file.name, target_dir + file.name)
+          sftp.download!(file.name, target_dir + file.name) unless exclude_files.include?(file)
         end
+      end
     end
-  end
 
   end
 
