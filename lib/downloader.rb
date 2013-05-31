@@ -85,7 +85,7 @@ module GDC
     # Download files satisfying given pattern
     def execute(target_dir, pattern, exclude_pattern = nil)
       target_dir = Pathname.new(target_dir).expand_path
-      Net::SFTP.start(@server, @pid + '@' + @login, :password => @password) do |sftp|
+      Net::SFTP.start(@server, @pid + '@' + @login, :password => @password, :auth_methods => ('password')) do |sftp|
         files = sftp.dir.glob(".", pattern)
         exclude_files = exclude_pattern.nil? ? [] : sftp.dir.glob(".", exclude_pattern)
         #file = files.min_by{|f| f.attributes.attributes[:mtime]}
